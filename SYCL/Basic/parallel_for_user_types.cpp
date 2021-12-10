@@ -1,4 +1,4 @@
-// RUN: %clangxx -fsycl %s -o %t.out
+// RUN: %clangxx -fsycl -fsycl-targets=%sycl_triple %s -o %t.out
 // RUN: %HOST_RUN_PLACEHOLDER %t.out
 // RUN: %CPU_RUN_PLACEHOLDER %t.out
 // RUN: %GPU_RUN_PLACEHOLDER %t.out
@@ -47,10 +47,15 @@ int main() {
     h.parallel_for(sycl::range<1>{sz},
                    [=](item_wrapper<1> item) { buf_acc[item.get()] += 1; });
   });
+  q.wait();
   bool failed = false;
 
   for (int i = 0; i < sz; ++i) {
     failed |= (data[i] != i + 1);
+  }
+  if (failed) {
+    std::cout << "item_wrapper check failed" << std::endl;
+    return 1;
   }
 
   // Check user defined sycl::nd_item wrapper
@@ -59,10 +64,16 @@ int main() {
     h.parallel_for(sycl::nd_range<1>{sz, 2},
                    [=](nd_item_wrapper<1> item) { buf_acc[item.get()] += 1; });
   });
+  q.wait();
 
   for (int i = 0; i < sz; ++i) {
     failed |= (data[i] != i + 2);
   }
+  if (failed) {
+    std::cout << "nd_item_wrapper check failed" << std::endl;
+    return 1;
+  }
 
-  return failed;
+  std::cout << "Test passed" << std::endl;
+  return 0;
 }

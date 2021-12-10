@@ -47,9 +47,10 @@ int main() {
     h.parallel_for(sycl::range<1>{sz},
                    [=](item_wrapper<1> item) { buf_acc[item.get()] += 1; });
   });
+  bool failed = false;
 
   for (int i = 0; i < sz; ++i) {
-    assert(data[i] == i + 1);
+    failed |= (data[i] != i + 1);
   }
 
   // Check user defined sycl::nd_item wrapper
@@ -60,8 +61,8 @@ int main() {
   });
 
   for (int i = 0; i < sz; ++i) {
-    assert(data[i] == i + 2);
+    failed |= (data[i] != i + 2);
   }
 
-  return 0;
+  return failed;
 }

@@ -50,12 +50,15 @@ int main() {
   q.wait();
   bool failed = false;
 
-  for (int i = 0; i < sz; ++i) {
-    failed |= (data[i] != i + 1);
-  }
-  if (failed) {
-    std::cout << "item_wrapper check failed" << std::endl;
-    return 1;
+  {
+    auto buf_acc = data_buf.get_access<sycl::access::mode::read>();
+    for (int i = 0; i < sz; ++i) {
+      failed |= (buf_acc[i] != i + 1);
+    }
+    if (failed) {
+      std::cout << "item_wrapper check failed" << std::endl;
+      return 1;
+    }
   }
 
   // Check user defined sycl::nd_item wrapper
@@ -66,12 +69,15 @@ int main() {
   });
   q.wait();
 
-  for (int i = 0; i < sz; ++i) {
-    failed |= (data[i] != i + 2);
-  }
-  if (failed) {
-    std::cout << "nd_item_wrapper check failed" << std::endl;
-    return 1;
+  {
+    auto buf_acc = data_buf.get_access<sycl::access::mode::read>();
+    for (int i = 0; i < sz; ++i) {
+      failed |= (buf_acc[i] != i + 2);
+    }
+    if (failed) {
+      std::cout << "nd_item_wrapper check failed" << std::endl;
+      return 1;
+    }
   }
 
   std::cout << "Test passed" << std::endl;

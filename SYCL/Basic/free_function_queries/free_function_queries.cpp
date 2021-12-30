@@ -1,5 +1,3 @@
-// FIXME: Investigate OS-agnostic failures
-// REQUIRES: TEMPORARY_DISABLED
 // RUN: %clangxx -fsycl -fsycl-targets=%sycl_triple %s -o %t.out
 // RUN: %ACC_RUN_PLACEHOLDER %t.out
 // RUN: %CPU_RUN_PLACEHOLDER %t.out
@@ -48,7 +46,8 @@ int main() {
 
           auto that_item = sycl::ext::oneapi::experimental::this_item<1>();
           results_acc[1] = that_item.get_id() == i;
-          results_acc[2] = that_item.get_range() == sycl::range<1>(n);
+          results_acc[2] =
+              that_item.get_range() == ((sycl::range<1>(n) + (31)) & ~(31));
           acc[i]++;
         });
       });
@@ -63,7 +62,7 @@ int main() {
   }
 
   {
-    constexpr int checks_number{2};
+    constexpr int checks_number{3};
     int results[checks_number]{};
     {
       sycl::buffer<int> buf(data, sycl::range<1>(n));
@@ -82,7 +81,9 @@ int main() {
           auto that_id = sycl::ext::oneapi::experimental::this_id<1>();
           results_acc[0] = i.get_id() == that_id;
           auto that_item = sycl::ext::oneapi::experimental::this_item<1>();
-          results_acc[1] = i == that_item;
+          results_acc[1] = i == that_item.get_id();
+          results_acc[2] =
+              that_item.get_range() == ((sycl::range<1>(n) + (31)) & ~(31));
           acc[i]++;
         });
       });
